@@ -6,13 +6,13 @@ if (!this.depp) (function(doc, ev) {
  * @global {Object} document - DOM
  */
 
-var depp = {},
-    devnull = function() {},
-    bundleDefs = {},  // maps bundleId : pathname[]
-    fetchCache = {},  // maps pathname : true/false
-    resultCache = {},  // maps pathname : 'e'|'s'
-    callbackQueue = {},  // maps pathname : Function
-    config = {};
+var depp = {},  // library singleton object
+    _devnull = function() {},
+    _bundleDefs = {},
+    _callbackQueue = {},
+    _resultCache = {},
+    _fetchCache = {},
+    _config = {};
 
 
 /**
@@ -20,89 +20,103 @@ var depp = {},
  * @param {string} error - Error string
  */
 function throwError(error) {
-  throw new Error('Depp Error ' + error);
+  throw new Error('Depp Error: ' + error);
 }
 
 
 /**
- * Check for circular references.
- * @param {string[]} paths - Bundle file paths
+ * De-reference bundles.
+ * @param {string[]} bundleList - List of bundles
+ * @param {object} ancestors - Set of previously processed bundles
  */
-function checkRefs(paths, bundleId) {
-  // exit recursive loop
-  if (!paths) return;
+function dereferenceBundles(bundleList, ancestors) {
+  ancestors = ancestors || [];
   
-  var i = paths.length,
-      path;
-  
-  while (i--) {
-    path = paths[i];
-    if (path === bundleId) throwError('2');
-    checkRefs(bundleDefs[path], bundleId);
-  }
+  var paths = [];
+
+  bundleList.forEach(function(bundleName) {
+    // check ancestors
+    if (ancestors.indexOf(bundleName) >= 0) throwError("Circular reference");
+
+    // add paths
+    var x = _bundleDefs[bundleName],
+        a;
+
+    // throw error if bundle not defined
+    if (!x) throwError("'" + bundleName + "' not defined");
+    
+    x.forEach(function(path) {
+      if (path in _bundleDefs) {
+        a = ancestors.slice();
+        a.push(bundleName);
+        paths = paths.concat(dereferenceBundles([path], a));
+      } else {
+        paths.push(path);
+      }
+    });
+  });
+
+  return paths;
 }
 
 
 /**
- * Subscribe to bundle load event.
- * @param {string[]} deps - List of dependencies
+ * Subscribe to multi-event list.
+ * @param {string[]} events - List of events
  * @param {Function} callbackFn - The callback function
  */
-function subscribe(deps, callbackFn) {
-  var depsNotFound = [],
-      i = deps.length,
+function subscribe(events, callbackFn) {
+  var i = events.length,
       numWaiting = i,
       fn,
-      dep,
-      r,
-      q;
+      event,
+      x;
 
   // define callback function
-  fn = function (dep, pathsNotFound) {
-    if (pathsNotFound.length) depsNotFound.push(dep);
+  fn = function (event, exitEarly) {
+    // execute error callback when first error is encountered
+    if (exitEarly) return callbackFn(event);
 
+    // execute success callback after all events have returned successfully
     numWaiting--;
-    if (!numWaiting) callbackFn(depsNotFound);
+    if (!numWaiting) callbackFn();
   };
 
   // register callback
   while (i--) {
-    dep = deps[i];
+    event = events[i];
 
     // execute callback if in result cache
-    r = resultCache[dep];
-    if (r) {
-      fn(dep, r);
+    x = _resultCache[event];
+    if (x) {
+      fn(event, x);
       continue;
     }
 
     // add to callback queue
-    q = callbackQueue[dep] = callbackQueue[dep] || [];
-    q.push(fn);
+    x = _callbackQueue[event] = _callbackQueue[event] || [];
+    x.push(fn);
   }
 }
 
 
 /**
- * Publish bundle load event.
- * @param {string} depId - Dependency id
- * @param {string[]} pathsNotFound - List of dependencies not found
+ * Publish event.
+ * @param {string} event - The event name
+ * @param {string[]} result - The event result ('s' or 'e')
  */
-function publish(depId, pathsNotFound) {
-  // exit if id isn't defined
-  if (!depId) return;
-
-  var q = callbackQueue[depId];
+function publish(event, result) {
+  var q = _callbackQueue[event];
 
   // cache result
-  resultCache[depId] = pathsNotFound;
+  _resultCache[event] = result;
 
   // exit if queue is empty
   if (!q) return;
 
   // empty callback queue
   while (q.length) {
-    q[0](depId, pathsNotFound);
+    q[0](event, result);
     q.splice(0, 1);
   }
 }
@@ -115,7 +129,7 @@ function publish(depId, pathsNotFound) {
  */
 function loadFile(path, callbackFn) {
   var doc = document,
-      beforeCallbackFn = config.before || devnull,
+      beforeCallbackFn = _config.before || _devnull,
       pathStripped = path.replace(/^(css|img)!/, ''),
       isCss,
       e;
@@ -161,7 +175,7 @@ function loadFile(path, callbackFn) {
     }
     
     // execute callback
-    callbackFn(path, result);
+    callbackFn(path, result == 'e');
   };
 
   // execute before callback
@@ -173,66 +187,21 @@ function loadFile(path, callbackFn) {
 
 
 /**
- * Load multiple files.
- * @param {string[]} paths - The file paths
- * @param {Function} callbackFn - The callback function
- */
-function loadFiles(paths, callbackFn) {
-  var numWaiting = paths.length,
-      x = numWaiting,
-      pathsNotFound = [],
-      fn,
-      i;
-
-  // define callback function
-  fn = function(path, result, defaultPrevented) {
-    // handle error
-    if (result == 'e') pathsNotFound.push(path);
-
-    numWaiting--;
-    if (!numWaiting) callbackFn(pathsNotFound);
-  };
-
-  // load scripts
-  for (i=0; i < x; i++) loadFile(paths[i], fn);
-}
-
-
-/**
- * Execute callbacks.
- * @param {Function} successFn - Success callback
- * @param {Function} errorFn - Error callback
- * @param {string[]} depsNotFound - List of dependencies not found
- */
-function executeCallbacks(successFn, errorFn, pathsNotFound) {
-  if (pathsNotFound.length) (errorFn || devnull)(pathsNotFound);
-  else (successFn || devnull)();
-}
-
-
-/**
  * Define dependency bundles.
  * @param {Object} bundleDefs - Bundle definitions
  */
 depp.define = function define(inputDefs) {
-  var bundleId,
-      paths;
-  
+  var paths;
+
   // copy bundle defs
-  for (bundleId in inputDefs) {
+  for (var bundleName in inputDefs) {
     // throw error if bundle is already defined
-    if (bundleId in bundleDefs) throwError("1");
+    if (bundleName in _bundleDefs) throwError("Bundle already defined");
 
-    paths = inputDefs[bundleId];
+    paths = inputDefs[bundleName];
 
-    // listify
-    paths = paths.push ? paths : [paths];
-
-    // check for circular references
-    checkRefs(paths, bundleId);
-    
-    // add to cache
-    bundleDefs[bundleId] = paths;
+    // listify and add to cache
+    _bundleDefs[bundleName] = paths.push ? paths : [paths];
   }
 };
 
@@ -242,57 +211,46 @@ depp.define = function define(inputDefs) {
  * @param {Object} newVals - New configuration values
  */
 depp.config = function (newVals) {
-  for (var k in newVals) config[k] = newVals[k];
+  for (var k in newVals) _config[k] = newVals[k];
 };
 
 
 /**
  * Register callbacks and trigger onetime-only download (if necessary).
- * @param {string or string[]} bundleList - List of bundle ids
+ * @param {string or string[]} bundleList - List of bundle names
  * @param {Function} successFn - Success callback
  * @param {Function} errorFn - Error callback
  */
 depp.require = function require(bundleList, successFn, errorFn) {
-  // listify
-  bundleList = bundleList.push ? bundleList : [bundleList];
+  // listify and de-reference bundles
+  var paths = dereferenceBundles(bundleList.push ? bundleList : [bundleList]);
 
-  // subscribe to load event
-  subscribe(bundleList, function(depsNotFound) {
-    // execute callbacks
-    executeCallbacks(successFn, errorFn, depsNotFound);
+  // subscribe to load events
+  subscribe(paths, function(firstPathNotFound) {
+    if (firstPathNotFound) (errorFn || _devnull)(firstPathNotFound);
+    else (successFn || _devnull)();
   });
 
-  // trigger onetime-only downloads
-  bundleList.forEach(function(bundleId) {
-    // skip if dep in fetch cache or not in bundle definitions
-    if (bundleId in fetchCache || !(bundleId in bundleDefs)) return;
+  // trigger file downloads
+  paths.forEach(function(path) {
+    // skip if file has already been fetched
+    if (path in _fetchCache) return;
 
     // update fetch cache
-    fetchCache[bundleId] = true;
-    
-    // trigger download
-    loadFiles(bundleDefs[bundleId], function(pathsNotFound) {
-      publish(bundleId, pathsNotFound);
-    });
+    _fetchCache[path] = true;
+
+    // load file and publish result
+    loadFile(path, publish);
   });
-};
-
-
-/**
- * Manually satisfy bundle dependencies.
- * @param {string} bundleId - The bundle id
- */
-depp.done = function done(bundleId) {
-  publish(bundleId, []);
 };
 
 
 /**
  * Check if bundle has already been defined
- * @param {string} bundleId - The bundle id
+ * @param {string} bundleName - The bundle name
  */
-depp.isDefined = function isDefined(bundleId) {
-  return bundleId in bundleDefs;
+depp.isDefined = function isDefined(bundleName) {
+  return bundleName in _bundleDefs;
 };
 
 
@@ -300,11 +258,11 @@ depp.isDefined = function isDefined(bundleId) {
  * Reset dependency trackers and bundle definitions
  */
 depp.reset = function reset() {
-  bundleDefs = {};
-  fetchCache = {};
-  resultCache = {};
-  callbackQueue = {};
-  config = {};
+  _bundleDefs = {};
+  _callbackQueue = {};
+  _resultCache = {};
+  _fetchCache = {};
+  _config = {};
 };
 
 
