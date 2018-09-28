@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+  <head>
+    <script src="assets/log.js"></script>
+    <script>
+      // use the `depp-load` event to detect load time
+      document.addEventListener('depp-load', function() {
+        var msg, el;
+        
+        if (window.depp !== undefined) msg = "SUCCESS: depp.js is available";
+        else msg = "ERROR: depp.js is not available";
+
+        el = document.createElement('div');
+        el.innerHTML = msg;
+        document.body.appendChild(el);
+      });
+    </script>
+    <script src="assets/johnnydepp/depp.js" async></script>
+  </head>
+  <body>
+  </body>
+</html>

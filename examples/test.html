@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+  <head>
+    <script src="assets/log.js"></script>
+    <script src="assets/johnnydepp/depp.js"></script>
+    <script>
+      depp.define({
+        'img1': ['assets/flash.svg'],
+        'img2': ['assets/flash.png'],
+        'img3': ['assets/flash-doesntexist.svg'],
+        'img4': ['img!assets/flash.svg?trick']
+      });
+
+      depp.require(['img1'], function() {
+        log('example1: flash.svg loaded');
+      });
+
+      depp.require(['img2'], function() {
+        log('example2: flash.png loaded');
+      });
+     
+      depp.require(
+        ['img3'],
+        function() {
+          log('example3: flash-doesntexist.svg triggered success (FAIL)');
+        },
+        function() {
+          log('example3: flash-doesntexist.svg triggered error (OK)');
+        }
+      );
+
+      depp.require(['img4'], function() {
+        log('example4: flash.svg loaded');
+      });
+    </script>
+  </head>
+  <body>
+  </body>
+</html>
