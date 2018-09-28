@@ -2,7 +2,10 @@
 
 <img src="https://www.muicss.com/static/images/johnnydepp.svg" width="250px">
 
-JohnnyDepp is a tiny dependency manager for modern browsers (XXX bytes).
+JohnnyDepp is a tiny dependency manager for modern browsers (862 bytes).
+
+[![Dependency Status](https://david-dm.org/muicss/johnnydepp.svg)](https://david-dm.org/muicss/johnnydepp)
+[![devDependency Status](https://david-dm.org/muicss/johnnydepp/dev-status.svg)](https://david-dm.org/muicss/johnnydepp?type=dev)
 
 ## Introduction
 
@@ -51,7 +54,7 @@ depp.require(['plugin1', 'plugin2'], function() {
 });
 ```
 
-JohnnyDepp is XXX bytes (minified + gzipped).
+JohnnyDepp is 862 bytes (minified + gzipped).
 
 ## Browser Support
 
