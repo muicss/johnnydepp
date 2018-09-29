@@ -76,7 +76,9 @@ JohnnyDepp is 862 bytes (minified + gzipped).
     <script>
       // define dependencies
       depp.define({
-        'jquery': ['//code.jquery.com/jquery-3.3.1.min.js'],
+        'jquery': [
+          '//code.jquery.com/jquery-3.3.1.min.js'
+        ],
         'jquery-ui': [
           'jquery',
           '//code.jquery.com/ui/1.12.1/jquery-ui.min.js',
@@ -356,7 +358,9 @@ To make it easy to use JohnnyDepp asynchronously, the library dispatches a 'depp
       document.addEventListener('depp-load', function() {
         // now the `depp` global object is available
         depp.define({
-          'jquery': ['//code.jquery.com/jquery-3.3.1.min.js'],
+          'jquery': [
+            '//code.jquery.com/jquery-3.3.1.min.js'
+          ],
           'jquery-ui': [
             'jquery',
             '//code.jquery.com/ui/1.12.1/jquery-ui.min.js',
