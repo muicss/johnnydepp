@@ -76,21 +76,29 @@ JohnnyDepp is 862 bytes (minified + gzipped).
     <script>
       // define dependencies
       depp.define({
-        'jquery': ['/path/to/jquery.js'],
-        'plugin1': ['jquery', '/path/to/jquery-plugin1.js'],
-        'plugin2': ['jquery', '/path/to/jquery-plugin2.js']
+        'jquery': ['//code.jquery.com/jquery-3.3.1.min.js'],
+        'jquery-ui': [
+          'jquery',
+          '//code.jquery.com/ui/1.12.1/jquery-ui.min.js',
+          '//code.jquery.com/ui/1.12.1/themes/cupertino/jquery-ui.css'
+        ]
       });
 
       // load dependencies
-      depp.require(['plugin1', 'plugin2'], function() {
-        /* plugin1 and plugin2 are ready to be used */
+      depp.require(['jquery-ui'], function() {
+        $(function() {
+          $("#datepicker").datepicker();
+        });
       });
     </script>
   </head>
   <body>
+    <p>Date: <input type="text" id="datepicker"></p>
   </body>
 </html>
 ```
+
+http://jsfiddle.net/muicss/am4f56d1/
 
 ## Examples
 
@@ -348,19 +356,26 @@ To make it easy to use JohnnyDepp asynchronously, the library dispatches a 'depp
       document.addEventListener('depp-load', function() {
         // now the `depp` global object is available
         depp.define({
-          'jquery': ['/path/to/jquery.js'],
-          'plugin1': ['jquery', '/path/to/jquery-plugin1.js'],
-          'plugin2': ['jquery', '/path/to/jquery-plugin2.js']
+          'jquery': ['//code.jquery.com/jquery-3.3.1.min.js'],
+          'jquery-ui': [
+            'jquery',
+            '//code.jquery.com/ui/1.12.1/jquery-ui.min.js',
+            '//code.jquery.com/ui/1.12.1/themes/cupertino/jquery-ui.css'
+          ]
         });
 
-        depp.require(['plugin1', 'plugin2'], function() {
-          /* plugin1 and plugin2 are ready to be used */
+        // load dependencies
+        depp.require(['jquery-ui'], function() {
+          $(function() {
+            $("#datepicker").datepicker();
+          });
         });
       });
     </script>
     <script src="//cdn.rawgit.com/muicss/johnnydepp/0.0.2/dist/depp.min.js" async></script>
   </head>
   <body>
+    <p>Date: <input type="text" id="datepicker"></p>
   </body>
 </html>
 ```
