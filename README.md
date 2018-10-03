@@ -2,14 +2,14 @@
 
 <img src="https://www.muicss.com/static/images/johnnydepp.svg" width="250px">
 
-JohnnyDepp is a tiny dependency manager for modern browsers (862 bytes).
+JohnnyDepp is a tiny dep(p)endency manager for modern browsers (862 bytes).
 
 [![Dependency Status](https://david-dm.org/muicss/johnnydepp.svg)](https://david-dm.org/muicss/johnnydepp)
 [![devDependency Status](https://david-dm.org/muicss/johnnydepp/dev-status.svg)](https://david-dm.org/muicss/johnnydepp?type=dev)
 
 ## Introduction
 
-JohnnyDepp is a tiny dependency manager for modern browsers (IE10+) that lets you fetch JavaScript, CSS and image files in parallel and execute code after your dependencies have been met. JohnnyDepp allows you to define code bundles and lazy-load the necessary files when you need them using the library's `require()` method. Each file will only be downloaded once so multiple calls to `require()` won't trigger duplicate downloads. The recommended way to use JohnnyDepp is to include the minified source of [depp.js](https://raw.githubusercontent.com/muicss/loadjs/master/dist/depp.min.js) in your &lt;html&gt; (possibly in the &lt;head&gt; tag) and then use the `depp` global to manage your dependencies after pageload.
+JohnnyDepp is a tiny dep(p)endency manager for modern browsers (IE10+) that lets you fetch JavaScript, CSS and image files in parallel and execute code after your dependencies have been met. JohnnyDepp allows you to define code bundles and lazy-load the necessary files when you need them using the library's `require()` method. Each file will only be downloaded once so multiple calls to `require()` won't trigger duplicate downloads. The recommended way to use JohnnyDepp is to include the minified source of [depp.js](https://raw.githubusercontent.com/muicss/loadjs/master/dist/depp.min.js) in your &lt;html&gt; (possibly in the &lt;head&gt; tag) and then use the `depp` global to manage your dependencies after pageload.
 
 JohnnyDepp is based on the [LoadJS](https://github.com/muicss/loadjs) library which powers the file fetching and error handling functionality behind the scenes. JohnnyDepp loads JavaScript files with `async: false` which means they will be downloaded in parallel and executed in series. If you're looking for a lower level async loading library you should check out LoadJS to see if that meets your needs.
 
