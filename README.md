@@ -199,8 +199,8 @@ http://jsfiddle.net/muicss/ezubwon4/
    ```javascript
    depp.define({
      'jquery': ['/path/to/jquery.js'],
-     'plugin1': ['jquery', '/path/to/jquery-plugin1.js'],
-     'plugin2': ['jquery', '/path/to/jquery-plugin2.js']
+     'plugin1': ['#jquery', '/path/to/jquery-plugin1.js'],
+     'plugin2': ['#jquery', '/path/to/jquery-plugin2.js']
    });
 
    depp.config({
