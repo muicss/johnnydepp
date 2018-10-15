@@ -2,7 +2,7 @@
 
 <img src="https://www.muicss.com/static/images/johnnydepp.svg" width="250px">
 
-JohnnyDepp is a tiny dependency manager for modern browsers (862 bytes).
+JohnnyDepp is a tiny dependency manager for modern browsers (937 bytes).
 
 [![Dependency Status](https://david-dm.org/muicss/johnnydepp.svg)](https://david-dm.org/muicss/johnnydepp)
 [![devDependency Status](https://david-dm.org/muicss/johnnydepp/dev-status.svg)](https://david-dm.org/muicss/johnnydepp?type=dev)
@@ -19,8 +19,8 @@ Here's an example of what you can do with JohnnyDepp:
 // define dependencies
 depp.define({
   'jquery': ['/path/to/jquery.js'],
-  'plugin1': ['jquery', '/path/to/plugin1.js', '/path/to/plugin1.css', '/path/to/plugin1.png'],
-  'plugin2': ['jquery', '/path/to/plugin2.js', '/path/to/plugin2.css', '/path/to/plugin2.png']
+  'plugin1': ['#jquery', '/path/to/plugin1.js', '/path/to/plugin1.css', '/path/to/plugin1.png'],
+  'plugin2': ['#jquery', '/path/to/plugin2.js', '/path/to/plugin2.css', '/path/to/plugin2.png']
 });
 
 // load dependencies
@@ -45,8 +45,8 @@ var depp = require('johnnydepp');
 
 depp.define({
   'jquery': ['/path/to/jquery.js'],
-  'plugin1': ['jquery', '/path/to/plugin1.js', '/path/to/plugin1.css', '/path/to/plugin1.png'],
-  'plugin2': ['jquery', '/path/to/plugin2.js', '/path/to/plugin2.css', '/path/to/plugin2.png']
+  'plugin1': ['#jquery', '/path/to/plugin1.js', '/path/to/plugin1.css', '/path/to/plugin1.png'],
+  'plugin2': ['#jquery', '/path/to/plugin2.js', '/path/to/plugin2.css', '/path/to/plugin2.png']
 });
 
 depp.require(['plugin1', 'plugin2'], function() {
@@ -54,7 +54,7 @@ depp.require(['plugin1', 'plugin2'], function() {
 });
 ```
 
-JohnnyDepp is 862 bytes (minified + gzipped).
+JohnnyDepp is 937 bytes (minified + gzipped).
 
 ## Browser Support
 
@@ -80,7 +80,7 @@ JohnnyDepp is 862 bytes (minified + gzipped).
           '//code.jquery.com/jquery-3.3.1.min.js'
         ],
         'jquery-ui': [
-          'jquery',
+          '#jquery',
           '//code.jquery.com/ui/1.12.1/jquery-ui.min.js',
           '//code.jquery.com/ui/1.12.1/themes/cupertino/jquery-ui.css'
         ]
@@ -100,7 +100,7 @@ JohnnyDepp is 862 bytes (minified + gzipped).
 </html>
 ```
 
-http://jsfiddle.net/muicss/am4f56d1/
+http://jsfiddle.net/muicss/ezubwon4/
 
 ## Examples
 
@@ -134,8 +134,8 @@ http://jsfiddle.net/muicss/am4f56d1/
    ```javascript
    depp.define({
      'jquery': ['/path/to/jquery.js'],
-     'bundle1': ['jquery', '/path/to/bundle1.js', '/path/to/bundle1.css', '/path/to/bundle1.png'],
-     'bundle2': ['jquery', '/path/to/bundle2.js', '/path/to/bundle2.css', '/path/to/bundle2.png']
+     'bundle1': ['#jquery', '/path/to/bundle1.js', '/path/to/bundle1.css', '/path/to/bundle1.png'],
+     'bundle2': ['#jquery', '/path/to/bundle2.js', '/path/to/bundle2.css', '/path/to/bundle2.png']
    });
 
    depp.require(['bundle1'], function() {
@@ -144,6 +144,36 @@ http://jsfiddle.net/muicss/am4f56d1/
 
    depp.require(['bundle2'], function() {
      /* jquery and bundle2 loaded successfully */
+   });
+   ```
+
+1. Register bundle loads manually
+
+   ```javascript
+   if (window.jQuery) depp.done('jquery');
+   else depp.define({'jquery': ['/path/to/jquery.js']});
+
+   depp.require(['jquery'], function() {
+     /* jquery has loaded */
+   });
+   ```
+
+1. Define bundles flexibly
+
+   ```javascript
+   depp.define({
+     'bundle1': ['#jquery', '/path/to/bundle1.js', '/path/to/bundle1.css', '/path/to/bundle1.png']
+   });
+
+   // require will wait until all bundles have been defined to trigger downloads
+   depp.require(['bundle1', 'bundle2'], function() {
+     /* jquery, bundle1 and bundle2 loaded successfully */
+   });
+
+   // add missing bundle definition
+   depp.define({
+     'jquery': ['/path/to/jquery.js'],
+     'bundle2': ['#jquery', '/path/to/bundle2.js', '/path/to/bundle2.css', '/path/to/bundle2.png']
    });
    ```
 
@@ -234,7 +264,7 @@ Examples:
 
    depp.define({
      'bundle1': ['/path/to/bundle1.js', '/path/to/bundle1.css'],
-     'bundle2': ['bundle1', '/path/to/bundle2.js', '/path/to/bundle2.css']
+     'bundle2': ['#bundle1', '/path/to/bundle2.js', '/path/to/bundle2.css']
    });
 
 5. Force treat files as CSS stylesheets and images:
@@ -267,7 +297,15 @@ Examples:
      /* foo.js and bar.js loaded */
    });
 
-2. Define an error callback:
+2. Define bundles after registering require callback
+
+   depp.require(['mybundle'], function() {
+     /* foo.js and bar.js loaded */
+   });
+
+   depp.define({'mybundle': ['/path/to/foo.js', '/path/to/bar.js']});
+
+3. Define an error callback:
 
    depp.define({
      'bundle1': ['/path/to/bundle1.js', '/path/to/bundle1.css'],
@@ -327,7 +365,37 @@ Examples:
    }
    
 ```
- 
+
+#### done() - Signal bundle load manually
+
+```
+done(bundleName)
+
+* bundleName {String} - The bundle name
+
+Examples:
+
+1. Register bundle loads manually
+
+   if (window.jQuery) depp.done('jquery');
+   else depp.define({'jquery': ['/path/to/jquery.js']});
+
+   depp.require(['jquery'], function() {
+     /* jquery has loaded successfully */
+   });
+
+2. Register bundle loads after registering require callback
+
+   depp.require(['jquery'], function() {
+     /* jquery has loaded successfully */
+   });
+
+   if (window.jQuery) depp.done('jquery');
+   else depp.define({'jquery': ['/path/to/jquery.js']});
+
+```
+
+
 #### reset() - Reset dependency trackers and bundle definitions
 
 ```
@@ -362,7 +430,7 @@ To make it easy to use JohnnyDepp asynchronously, the library dispatches a 'depp
             '//code.jquery.com/jquery-3.3.1.min.js'
           ],
           'jquery-ui': [
-            'jquery',
+            '#jquery',
             '//code.jquery.com/ui/1.12.1/jquery-ui.min.js',
             '//code.jquery.com/ui/1.12.1/themes/cupertino/jquery-ui.css'
           ]

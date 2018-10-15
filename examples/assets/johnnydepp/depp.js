@@ -32,31 +32,52 @@ function throwError(error) {
 function dereferenceBundles(bundleList, ancestors) {
   ancestors = ancestors || [];
   
-  var paths = [];
+  var undefinedBundles = [], paths = [];
 
   bundleList.forEach(function(bundleName) {
     // check ancestors
     if (ancestors.indexOf(bundleName) >= 0) throwError("Circular reference");
 
-    // add paths
-    var x = _bundleDefs[bundleName],
-        a;
-
-    // throw error if bundle not defined
-    if (!x) throwError("'" + bundleName + "' not defined");
+    // update undefinedBundles list
+    if (!(bundleName in _bundleDefs)) {
+      return undefinedBundles.push('#' + bundleName);
+    }
     
-    x.forEach(function(path) {
-      if (path in _bundleDefs) {
-        a = ancestors.slice();
+    // add paths
+    _bundleDefs[bundleName].forEach(function(path) {
+      if (path[0] == '#') {
+        // dereference nested bundle
+        var a = ancestors.slice();
         a.push(bundleName);
-        paths = paths.concat(dereferenceBundles([path], a));
+        a = dereferenceBundles([path.slice(1)], a);
+
+        // update paths and undefinedBundles
+        undefinedBundles = undefinedBundles.concat(a[0]);
+        paths = paths.concat(a[1]);
       } else {
+        // update paths
         paths.push(path);
       }
     });
   });
 
-  return paths;
+  return [undefinedBundles, paths];
+}
+
+
+/**
+ * Execute callback function after bundles get defined.
+ * @param {string[]} bundleList - List of bundle names
+ * @param {Function} callbackFn - The callback function
+ */
+function onBundlesReady(bundleList, callbackFn) {
+  var x = dereferenceBundles(bundleList);
+
+  if (x[0].length) {
+    subscribe(x[0], function() {onBundlesReady(bundleList, callbackFn);});
+  } else {
+    callbackFn(x[1]);
+  }
 }
 
 
@@ -72,6 +93,9 @@ function subscribe(events, callbackFn) {
       event,
       x;
 
+  // execute callback and exit if event list is empty
+  if (i == 0) return callbackFn();
+  
   // define callback function
   fn = function (event, exitEarly) {
     // execute error callback when first error is encountered
@@ -87,9 +111,8 @@ function subscribe(events, callbackFn) {
     event = events[i];
 
     // execute callback if in result cache
-    x = _resultCache[event];
-    if (x) {
-      fn(event, x);
+    if (event in _resultCache) {
+      fn(event, _resultCache[event]);
       continue;
     }
 
@@ -202,6 +225,9 @@ depp.define = function define(inputDefs) {
 
     // listify and add to cache
     _bundleDefs[bundleName] = paths.push ? paths : [paths];
+
+    // publish bundle definition event
+    publish('#' + bundleName);
   }
 };
 
@@ -222,26 +248,42 @@ depp.config = function (newVals) {
  * @param {Function} errorFn - Error callback
  */
 depp.require = function require(bundleList, successFn, errorFn) {
-  // listify and de-reference bundles
-  var paths = dereferenceBundles(bundleList.push ? bundleList : [bundleList]);
+  // listify
+  bundleList = bundleList.push ? bundleList : [bundleList];
 
-  // subscribe to load events
-  subscribe(paths, function(firstPathNotFound) {
-    if (firstPathNotFound) (errorFn || _devnull)(firstPathNotFound);
-    else (successFn || _devnull)();
+  // load files after bundles get defined
+  onBundlesReady(bundleList, function(paths) {
+    // subscribe to file load events
+    subscribe(paths, function(firstPathNotFound) {
+      if (firstPathNotFound) (errorFn || _devnull)(firstPathNotFound);
+      else (successFn || _devnull)();
+    });
+    
+    // trigger file downloads
+    paths.forEach(function(path) {
+      // skip if file has already been fetched
+      if (path in _fetchCache) return;
+      
+      // update fetch cache
+      _fetchCache[path] = true;
+      
+      // load file and publish result
+      loadFile(path, publish);
+    });
   });
+};
 
-  // trigger file downloads
-  paths.forEach(function(path) {
-    // skip if file has already been fetched
-    if (path in _fetchCache) return;
 
-    // update fetch cache
-    _fetchCache[path] = true;
+/**
+ * Manually register a bundle load
+ * @param {string} bundleName - The bundle name
+ */
+depp.done = function done(bundleName) {
+  // override bundle definition
+  _bundleDefs[bundleName] = [];
 
-    // load file and publish result
-    loadFile(path, publish);
-  });
+  // publish definition event
+  publish('#' + bundleName);
 };
 
 
