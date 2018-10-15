@@ -31,8 +31,8 @@ depp.require(['plugin1', 'plugin2'], function() {
 
 The latest version of JohnnyDepp can be found in the `dist/` directory in this repository:
 
-  * [depp.js](https://cdn.rawgit.com/muicss/johnnydepp/0.0.2/dist/depp.js)
-  * [depp.min.js](https://cdn.rawgit.com/muicss/johnnydepp/0.0.2/dist/depp.min.js)
+  * [depp.js](https://cdn.rawgit.com/muicss/johnnydepp/0.0.3/dist/depp.js)
+  * [depp.min.js](https://cdn.rawgit.com/muicss/johnnydepp/0.0.3/dist/depp.min.js)
 
 You can also use it as a CJS or AMD module:
 
@@ -72,7 +72,7 @@ JohnnyDepp is 937 bytes (minified + gzipped).
 <!doctype html>
 <html>
   <head>
-    <script src="//cdn.rawgit.com/muicss/johnnydepp/0.0.2/dist/depp.min.js"></script>
+    <script src="//cdn.rawgit.com/muicss/johnnydepp/0.0.3/dist/depp.min.js"></script>
     <script>
       // define dependencies
       depp.define({
@@ -444,7 +444,7 @@ To make it easy to use JohnnyDepp asynchronously, the library dispatches a 'depp
         });
       });
     </script>
-    <script src="//cdn.rawgit.com/muicss/johnnydepp/0.0.2/dist/depp.min.js" async></script>
+    <script src="//cdn.rawgit.com/muicss/johnnydepp/0.0.3/dist/depp.min.js" async></script>
   </head>
   <body>
     <p>Date: <input type="text" id="datepicker"></p>
