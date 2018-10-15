@@ -363,7 +363,7 @@ Examples:
    
 ```
 
-#### done() - Signal bundle load manually
+#### done() - Register bundle load manually
 
 ```
 done(bundleName)
