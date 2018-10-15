@@ -161,18 +161,15 @@ http://jsfiddle.net/muicss/ezubwon4/
 1. Define bundles flexibly
 
    ```javascript
-   depp.define({
-     'bundle1': ['#jquery', '/path/to/bundle1.js', '/path/to/bundle1.css', '/path/to/bundle1.png']
-   });
-
-   // require will wait until all bundles have been defined to trigger downloads
+   // register callback first
    depp.require(['bundle1', 'bundle2'], function() {
      /* jquery, bundle1 and bundle2 loaded successfully */
    });
 
-   // add missing bundle definition
+   // define bundles later
    depp.define({
      'jquery': ['/path/to/jquery.js'],
+     'bundle1': ['#jquery', '/path/to/bundle1.js', '/path/to/bundle1.css', '/path/to/bundle1.png'],
      'bundle2': ['#jquery', '/path/to/bundle2.js', '/path/to/bundle2.css', '/path/to/bundle2.png']
    });
    ```
