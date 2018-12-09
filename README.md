@@ -158,7 +158,7 @@ http://jsfiddle.net/muicss/ezubwon4/
    });
    ```
 
-1. Define bundles flexibly
+1. Register require callbacks before defining bundles
 
    ```javascript
    // register callback first
