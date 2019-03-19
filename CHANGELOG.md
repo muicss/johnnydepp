@@ -1,5 +1,9 @@
 # JohnnyDep Changelog
 
+## 0.1.0 - March 19, 2019
+
+* Fixed bug in IE Edge causing CSS load failures to call success callbacks
+
 ## 0.0.3 - October 15, 2018
 
 * Added .done() method
