@@ -151,16 +151,24 @@ function loadFile(path, callbackFn) {
   var doc = document,
       beforeCallbackFn = _config.before || _devnull,
       pathStripped = path.replace(/^(css|img)!/, ''),
-      isCss,
+      isLegacyIECss,
       e;
 
   if (/(^css!|\.css$)/.test(path)) {
-    isCss = true;
-
     // css
     e = doc.createElement('link');
     e.rel = 'stylesheet';
     e.href = pathStripped;
+
+    // tag IE9+
+    isLegacyIECss = 'hideFocus' in e;
+
+    // use preload in IE Edge (to detect load errors)
+    if (isLegacyIECss && e.relList) {
+      isLegacyIECss = 0;
+      e.rel = 'preload';
+      e.as = 'style';
+    }
   } else if (/(^img!|\.(png|gif|jpg|svg)$)/.test(path)) {
     // image
     e = doc.createElement('img');
@@ -175,9 +183,9 @@ function loadFile(path, callbackFn) {
   e.onload = e.onerror = e.onbeforeload = function (ev) {
     var result = ev.type[0];
 
-    // Note: The following code isolates IE using `hideFocus` and treats empty
-    // stylesheets as failures to get around lack of onerror support
-    if (isCss && 'hideFocus' in e) {
+    // treat empty stylesheets as failures to get around lack of onerror
+    // support in IE9-11
+    if (isLegacyIECss) {
       try {
         if (!e.sheet.cssText.length) result = 'e';
       } catch (x) {
@@ -192,6 +200,11 @@ function loadFile(path, callbackFn) {
     if (result == 'b') {
       if (ev.defaultPrevented) result = 'e';
       else return;
+    }
+
+    // activate preloaded stylesheets
+    if (result != 'e' && e.rel == 'preload' && e.as == 'style') {
+      return e.rel = 'stylesheet'; // jshint ignore: line
     }
     
     // execute callback
