@@ -261,16 +261,24 @@ describe('JohnnyDepp tests', function() {
 
       
       function assertLoaded(src) {
-        var i = new Image();
-        i.src = src;
-        assert.equal(i.naturalWidth > 0, true);
+        // loop through images
+        var imgs = document.getElementsByTagName('img');
+
+        Array.prototype.slice.call(imgs).forEach(function(img) {
+	  // verify image was loaded
+	  if (img.src === src) assert.equal(img.naturalWidth > 0, true);
+        });
       }
       
       
       function assertNotLoaded(src) {
-        var i = new Image();
-        i.src = src;
-        assert.equal(i.naturalWidth, 0)
+        // loop through images
+        var imgs = document.getElementsByTagName('img');
+
+        Array.prototype.slice.call(imgs).forEach(function(img) {
+	  // fail if image was loaded
+          if (img.src === src) assert.equal(img.naturalWidth, 0);
+        });
       }
       
       
