@@ -1,5 +1,9 @@
 # JohnnyDep Changelog
 
+## 0.1.1 - December 11, 2020
+
+* Upgraded devDependencies
+
 ## 0.1.0 - March 19, 2019
 
 * Fixed bug in IE Edge causing CSS load failures to call success callbacks

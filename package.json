@@ -1,6 +1,6 @@
 {
   "name": "johnnydepp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "description": "Tiny dependency manager modern browsers",
   "keywords": [
@@ -25,12 +25,12 @@
     "http-server": "http-server"
   },
   "devDependencies": {
-    "del": "^5.1.0",
+    "del": "^6.0.0",
     "gulp": "^4.0.2",
     "gulp-jshint": "^2.1.0",
-    "gulp-rename": "^1.4.0",
+    "gulp-rename": "^2.0.0",
     "gulp-uglify": "^3.0.2",
     "gulp-umd": "^2.0.0",
-    "jshint": "^2.10.2"
+    "jshint": "^2.11.1"
   }
 }
