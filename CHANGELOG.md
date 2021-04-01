@@ -1,5 +1,9 @@
 # JohnnyDep Changelog
 
+## 0.1.2 - April 1, 2021
+
+* Upgraded devDependencies
+
 ## 0.1.1 - December 11, 2020
 
 * Upgraded devDependencies
