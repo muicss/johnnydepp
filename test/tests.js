@@ -128,6 +128,19 @@ describe('JohnnyDepp tests', function() {
         // run tests
         testFn(paths);
       });
+
+      
+      it('supports forced "module!" files', function(done) {
+        fetch('module!assets/module.js', function() {
+	  assert.equal(pathsLoaded['module.js'], 1);
+
+          // verify type attribute
+          let el = document.querySelector('script[src="assets/module.js"]');
+          assert.equal(el.type, "module");
+
+	  done();
+        });
+      });
     });
 
     

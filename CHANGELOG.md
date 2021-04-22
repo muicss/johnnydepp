@@ -1,5 +1,9 @@
 # JohnnyDep Changelog
 
+## 0.1.3 - April 22, 2021
+
+* Added support for JavaScript modules with "module!" modifier
+
 ## 0.1.2 - April 1, 2021
 
 * Upgraded devDependencies

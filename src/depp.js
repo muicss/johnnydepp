@@ -150,7 +150,7 @@ function publish(event, result) {
 function loadFile(path, callbackFn) {
   var doc = document,
       beforeCallbackFn = _config.before || _devnull,
-      pathStripped = path.replace(/^(css|img)!/, ''),
+      pathStripped = path.replace(/^(css|img|module)!/, ''),
       isLegacyIECss,
       e;
 
@@ -172,12 +172,15 @@ function loadFile(path, callbackFn) {
   } else if (/(^img!|\.(png|gif|jpg|svg)$)/.test(path)) {
     // image
     e = doc.createElement('img');
-    e.src = pathStripped;    
+    e.src = pathStripped;
   } else {
     // javascript
     e = doc.createElement('script');
-    e.src = path;
+    e.src = pathStripped;
     e.async = false;
+
+    // module
+    if (/^module!/.test(path)) e.type = "module";
   }
 
   e.onload = e.onerror = e.onbeforeload = function (ev) {
