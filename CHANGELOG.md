@@ -1,5 +1,9 @@
 # JohnnyDep Changelog
 
+## 0.1.4 - August 27, 2021
+
+* Bumped path-parse from 1.0.6 to 1.0.7
+
 ## 0.1.3 - April 22, 2021
 
 * Added support for JavaScript modules with "module!" modifier
