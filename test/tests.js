@@ -128,6 +128,19 @@ describe('JohnnyDepp tests', function() {
         // run tests
         testFn(paths);
       });
+
+      
+      it('supports forced "module!" files', function(done) {
+        fetch('module!assets/module.js', function() {
+	  assert.equal(pathsLoaded['module.js'], 1);
+
+          // verify type attribute
+          let el = document.querySelector('script[src="assets/module.js"]');
+          assert.equal(el.type, "module");
+
+	  done();
+        });
+      });
     });
 
     
@@ -261,16 +274,24 @@ describe('JohnnyDepp tests', function() {
 
       
       function assertLoaded(src) {
-        var i = new Image();
-        i.src = src;
-        assert.equal(i.naturalWidth > 0, true);
+        // loop through images
+        var imgs = document.getElementsByTagName('img');
+
+        Array.prototype.slice.call(imgs).forEach(function(img) {
+	  // verify image was loaded
+	  if (img.src === src) assert.equal(img.naturalWidth > 0, true);
+        });
       }
       
       
       function assertNotLoaded(src) {
-        var i = new Image();
-        i.src = src;
-        assert.equal(i.naturalWidth, 0)
+        // loop through images
+        var imgs = document.getElementsByTagName('img');
+
+        Array.prototype.slice.call(imgs).forEach(function(img) {
+	  // fail if image was loaded
+          if (img.src === src) assert.equal(img.naturalWidth, 0);
+        });
       }
       
       
@@ -419,7 +440,7 @@ describe('JohnnyDepp tests', function() {
         // define
         depp.define({
           'bundle1': ['/file.js'],
-          'bundle2': ['bundle1', '/file.js']
+          'bundle2': ['#bundle1', '/file.js']
         });
         
         // check
@@ -449,18 +470,21 @@ describe('JohnnyDepp tests', function() {
       });
       
 
-      it('raises error if bundle is not defined', function() {
-        var fn = function() {
-          depp.require('doesnotexist');
-        };
+      it('allows bundle definition after require', function(done) {
+        // require
+        depp.require('file1xx', function() {
+          assert.equal(pathsLoaded['file1.js'], 1);
+          done();
+        });
 
-        expect(fn).to.throw("Depp Error: 'doesnotexist' not defined");
+        // define
+        depp.define({'file1xx': ['assets/file1.js']});
       });
 
-
+      
       it('raises error on L1 circular references', function() {
         // define
-        depp.define({'mybundle': ['mybundle']});
+        depp.define({'mybundle': ['#mybundle']});
 
         // require
         var fn = function() {
@@ -475,8 +499,8 @@ describe('JohnnyDepp tests', function() {
       it('raises error on L2 circular references', function() {
         // define
         depp.define({
-          'bundle1': ['bundle2', '/file.js'],
-          'bundle2': ['bundle1', '/file.js']
+          'bundle1': ['#bundle2', '/file.js'],
+          'bundle2': ['#bundle1', '/file.js']
         });
 
         // require
@@ -489,6 +513,23 @@ describe('JohnnyDepp tests', function() {
       });
 
 
+      it('raises error on L2 circular reference after require', function(){
+        // define 1
+        depp.define({'bundle2': ['#bundle1', '/file.js']});
+
+        // require
+        depp.require('bundle2');
+
+        // define 2
+        var fn = function() {
+          depp.define({'bundle1': ['#bundle2', '/file.js']});
+        };
+
+        // check
+        expect(fn).to.throw('Depp Error: Circular reference');
+      });
+      
+      
       it('multiple calls only loads files once', function(done) {
         var nCalls = 0;
         
@@ -647,6 +688,65 @@ describe('JohnnyDepp tests', function() {
 
     
     // ========================================================================
+    // done() method
+    // ========================================================================
+
+    describe('done() method tests', function() {
+
+      it('should execute callbacks created before .done()', function(done) {
+        depp.require(['mybundle'], function() {
+          assert.equal(depp.isDefined('mybundle'), true);
+          done();
+        });
+
+        depp.done('mybundle');
+      });
+
+
+      it('should execute callbacks created after .done()', function(done) {
+        depp.done('mybundle');
+
+        depp.require(['mybundle'], function() {
+          assert.equal(depp.isDefined('mybundle'), true);
+          done();
+        });        
+      });
+
+      
+      it('should handle .done() on pre-defined bundles', function(done) {
+        // define bundle
+        depp.define({
+          'mybundle': ['assets/file1.js']
+        });
+
+        // call .done() on bundle
+        depp.done('mybundle');
+
+        // check that files were not loaded
+        depp.require(['mybundle'], function() {
+          assert.equal(pathsLoaded['file1.js'], undefined);
+          done();
+        });        
+      });
+
+      
+      it('handles .done() on bundles defined after require', function(done) {
+        // define 1
+        depp.define({'bundle2': ['#bundle1', 'assets/file2.js']});
+
+        // require
+        depp.require(['bundle2'], function() {
+          assert.equal(pathsLoaded['file2.js'], 1);
+          done();
+        });
+
+        // define 2
+        depp.done('bundle1');
+      });
+    });
+    
+    
+    // ========================================================================
     // reset() method
     // ========================================================================
 
@@ -675,12 +775,11 @@ describe('JohnnyDepp tests', function() {
     
     describe('Bundle loading tests', function() {
 
-      
       it('handles L1 nested bundles', function(done) {
         // define
         depp.define({
           'bundle1': ['assets/file1.js'],
-          'bundle2': ['bundle1', 'assets/file2.js']
+          'bundle2': ['#bundle1', 'assets/file2.js']
         });
         
         // require
@@ -696,8 +795,8 @@ describe('JohnnyDepp tests', function() {
         // define
         depp.define({
           'bundle1': ['assets/file1.js'],
-          'bundle2': ['bundle1', 'assets/file2.js'],
-          'bundle3': ['bundle2', 'assets/file3.js']
+          'bundle2': ['#bundle1', 'assets/file2.js'],
+          'bundle3': ['#bundle2', 'assets/file3.js']
         });
         
         // require
@@ -710,11 +809,26 @@ describe('JohnnyDepp tests', function() {
       });
 
 
+      it('handles nested bundles defined after require', function(done) {
+        // define 1
+        depp.define({'bundle2': ['#bundle1', 'assets/file2.js']});
+
+        // require
+        depp.require(['bundle2'], function() {
+          assert.equal(pathsLoaded['file2.js'], 1);
+          done();
+        });
+
+        // define 2
+        depp.define({'bundle1': ['assets/file1.js']});
+      });
+      
+      
       it('handles multiple nested bundles', function(done) {
         // define
         depp.define({
           'bundle1': ['assets/file1.js'],
-          'bundle2': ['bundle1', 'assets/file2.js'],
+          'bundle2': ['#bundle1', 'assets/file2.js'],
           'bundle3': ['assets/file3.js']
         });
         
@@ -732,8 +846,8 @@ describe('JohnnyDepp tests', function() {
         // define
         depp.define({
           'bundle1': ['assets/file1.js'],
-          'bundle2': ['bundle1', 'assets/file2.js'],
-          'bundle3': ['bundle1', 'assets/file3.js']
+          'bundle2': ['#bundle1', 'assets/file2.js'],
+          'bundle3': ['#bundle1', 'assets/file3.js']
         });
         
         // require
